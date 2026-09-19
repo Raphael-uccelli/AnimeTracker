@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
 function mapAnimeForUi(anime) {
   let year = "Inconnue";
   let releaseDate = "Date inconnue";
@@ -21,7 +23,9 @@ function mapAnimeForUi(anime) {
 }
 
 export async function fetchAnimesForSeason(year, season) {
-  const response = await fetch(`/api/anime/season?year=${year}&season=${season}`);
+  const response = await fetch(
+    `${API_BASE_URL}/api/anime/season?year=${year}&season=${season}`
+  );
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);

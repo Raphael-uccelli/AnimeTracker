@@ -21,7 +21,6 @@ function App() {
   const [animes, setAnimes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [currentAnimeIndex, setCurrentAnimeIndex] = useState(0);
 
   // "home" | "library" | "swipe" | "favorites" | "watched" | "notInterested" | "search"
   const [view, setView] = useState("home");
@@ -33,6 +32,9 @@ function App() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [sortOption, setSortOption] = useState("newest");
   const [showGenreModal, setShowGenreModal] = useState(false);
+
+  // Historique des cartes swipées (dans cette session), pour le bouton "retour"
+  const [swipeHistory, setSwipeHistory] = useState([]);
 
   const favoriteAnimes = animeStatuses
     .filter((s) => s.favorite && s.anime)
@@ -46,8 +48,6 @@ function App() {
     .filter((s) => s.status === "NOT_INTERESTED" && s.anime)
     .map((s) => s.anime);
 
-  // Combine la saison actuellement chargée + tout ce qui a déjà été trié,
-  // pour que la recherche fonctionne même sans avoir rechargé chaque saison.
   const combinedAnimes = useMemo(() => {
     const map = new Map();
     animes.forEach((anime) => map.set(anime.id, anime));
@@ -98,7 +98,14 @@ function App() {
     return list;
   }, [animes, selectedGenres, sortOption]);
 
-  const currentAnime = sortedFilteredAnimes[currentAnimeIndex];
+  // Source de vérité unique pour la carte affichée : la première sans statut
+  // (ou en UNSEEN) dans la liste triée. Plus d'index séparé à synchroniser.
+  const currentAnime = useMemo(() => {
+    return sortedFilteredAnimes.find((anime) => {
+      const status = animeStatuses.find((s) => s.animeId === anime.id);
+      return !status || status.status === "UNSEEN";
+    });
+  }, [sortedFilteredAnimes, animeStatuses]);
 
   // Sauvegarder à chaque changement de statuts
   useEffect(() => {
@@ -114,6 +121,7 @@ function App() {
     async function loadSeason() {
       setIsLoading(true);
       setErrorMessage("");
+      setSwipeHistory([]);
 
       try {
         const seasonAnimes = await fetchAnimesForSeason(selectedYear, selectedSeason);
@@ -140,21 +148,6 @@ function App() {
     };
   }, [selectedYear, selectedSeason]);
 
-  // Reprendre au premier anime non traité de la saison
-  useEffect(() => {
-    if (animes.length === 0) return;
-
-    const firstUnseenIndex = sortedFilteredAnimes.findIndex((anime) => {
-      const status = animeStatuses.find((s) => s.animeId === anime.id);
-      return !status || status.status === "UNSEEN";
-    });
-
-    setCurrentAnimeIndex(
-      firstUnseenIndex === -1 ? sortedFilteredAnimes.length : firstUnseenIndex
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animes, selectedGenres, sortOption]);
-
   function handleSelectSeason(year, season) {
     setSelectedYear(year);
     setSelectedSeason(season);
@@ -169,28 +162,23 @@ function App() {
     );
   }
 
-  function nextAnime() {
-    setCurrentAnimeIndex((currentIndex) =>
-      Math.min(currentIndex + 1, sortedFilteredAnimes.length)
-    );
-  }
-
   function handleBack() {
-    if (currentAnimeIndex === 0) return;
+    if (swipeHistory.length === 0) return;
 
-    const previousIndex = currentAnimeIndex - 1;
-    const previousAnime = sortedFilteredAnimes[previousIndex];
+    const lastId = swipeHistory[swipeHistory.length - 1];
+
+    setSwipeHistory((history) => history.slice(0, -1));
 
     setAnimeStatuses((currentStatuses) =>
       currentStatuses.map((s) =>
-        s.animeId === previousAnime.id ? { ...s, status: "UNSEEN" } : s
+        s.animeId === lastId ? { ...s, status: "UNSEEN" } : s
       )
     );
-
-    setCurrentAnimeIndex(previousIndex);
   }
 
   function upsertStatus(updater) {
+    if (!currentAnime) return;
+
     setAnimeStatuses((currentStatuses) => {
       const existingStatus = currentStatuses.find(
         (s) => s.animeId === currentAnime.id
@@ -215,13 +203,15 @@ function App() {
   }
 
   function handleSeen() {
+    if (!currentAnime) return;
     upsertStatus((s) => ({ ...s, status: "WATCHED", anime: currentAnime }));
-    nextAnime();
+    setSwipeHistory((history) => [...history, currentAnime.id]);
   }
 
   function handleNotInterested() {
+    if (!currentAnime) return;
     upsertStatus((s) => ({ ...s, status: "NOT_INTERESTED", anime: currentAnime }));
-    nextAnime();
+    setSwipeHistory((history) => [...history, currentAnime.id]);
   }
 
   function handleFavorite() {
@@ -377,7 +367,7 @@ function App() {
                 <>
                   <button
                     onClick={handleBack}
-                    disabled={currentAnimeIndex === 0}
+                    disabled={swipeHistory.length === 0}
                     className="back-button"
                   >
                     ↩️ Revenir en arrière
