@@ -12,15 +12,22 @@ function AnimeListPage({
   onTogglePin
 }) {
   const [selectedAnime, setSelectedAnime] = useState(null);
-  const [viewMode, setViewMode] = useState("list"); // "list" | "grid"
+  const [viewMode, setViewMode] = useState("list");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredAnimes = normalizedQuery
+    ? animes.filter((anime) => anime.title?.toLowerCase().includes(normalizedQuery))
+    : animes;
 
   const pinnedAnimes = enablePin
-    ? animes.filter((anime) => pinnedIds.includes(anime.id))
+    ? filteredAnimes.filter((anime) => pinnedIds.includes(anime.id))
     : [];
 
   const remainingAnimes = enablePin
-    ? animes.filter((anime) => !pinnedIds.includes(anime.id))
-    : animes;
+    ? filteredAnimes.filter((anime) => !pinnedIds.includes(anime.id))
+    : filteredAnimes;
 
   const chapters = groupByChapters(remainingAnimes);
 
@@ -56,7 +63,21 @@ function AnimeListPage({
         </div>
       </div>
 
+      {animes.length > 0 && (
+        <input
+          type="text"
+          placeholder="Rechercher dans cette liste..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          className="search-input"
+        />
+      )}
+
       {animes.length === 0 && <p>{emptyMessage}</p>}
+
+      {animes.length > 0 && filteredAnimes.length === 0 && (
+        <p>Aucun résultat pour "{searchQuery}".</p>
+      )}
 
       {enablePin && pinnedAnimes.length > 0 && (
         <div className="pinned-section">
@@ -128,16 +149,18 @@ function AnimeListPage({
                   onClick={() => setSelectedAnime(anime)}
                 >
                   <img src={anime.image} alt={`Image de ${anime.title}`} />
-                  <p>{anime.title}</p>
+                  <div className="grid-item-info">
+                    <p className="grid-item-title">{anime.title}</p>
 
-                  {enablePin && (
-                    <button
-                      className="grid-pin-bar"
-                      onClick={(event) => handlePinClick(event, anime.id)}
-                    >
-                      📌 Épingler
-                    </button>
-                  )}
+                    {enablePin && (
+                      <button
+                        className="grid-pin-button"
+                        onClick={(event) => handlePinClick(event, anime.id)}
+                      >
+                        📌 Épingler
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

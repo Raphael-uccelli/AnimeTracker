@@ -1,5 +1,21 @@
-function AnimeDetailsModal({ anime, onClose, onGoToSeason }) {
+import { useRef } from "react";
+
+function AnimeDetailsModal({ anime, onClose, onGoToSeason, isFavorite, onToggleFavorite }) {
+  const lastTapRef = useRef(0);
+
   if (!anime) return null;
+
+  function handleImageTap() {
+    if (!onToggleFavorite) return;
+
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      onToggleFavorite(anime);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -8,7 +24,11 @@ function AnimeDetailsModal({ anime, onClose, onGoToSeason }) {
           ✕
         </button>
 
-        <img src={anime.image} alt={`Image de ${anime.title}`} />
+        <img
+          src={anime.image}
+          alt={`Image de ${anime.title}`}
+          onClick={handleImageTap}
+        />
 
         <h2>{anime.title}</h2>
 
@@ -27,14 +47,25 @@ function AnimeDetailsModal({ anime, onClose, onGoToSeason }) {
 
         <p>{anime.synopsis}</p>
 
-        {onGoToSeason && (
-          <button
-            className="start-button modal-go-to-season"
-            onClick={() => onGoToSeason(anime)}
-          >
-            📅 Aller à sa saison
-          </button>
-        )}
+        <div className="modal-actions">
+          {onToggleFavorite && (
+            <button
+              className="modal-favorite-button"
+              onClick={() => onToggleFavorite(anime)}
+            >
+              {isFavorite ? "❤️ Retirer des favoris" : "♡ Ajouter aux favoris"}
+            </button>
+          )}
+
+          {onGoToSeason && (
+            <button
+              className="start-button modal-go-to-season"
+              onClick={() => onGoToSeason(anime)}
+            >
+              📅 Aller à sa saison
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

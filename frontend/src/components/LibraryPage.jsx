@@ -12,7 +12,7 @@ function readSnapshot(year, season) {
   }
 }
 
-function LibraryPage({ onSelectSeason, animeStatuses }) {
+function LibraryPage({ onSelectSeason, animeStatuses, onToggleFavorite }) {
   const currentYear = new Date().getFullYear();
   const years = [];
   for (let year = currentYear; year >= currentYear - 5; year--) {
@@ -57,8 +57,6 @@ function LibraryPage({ onSelectSeason, animeStatuses }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Recherche globale dans toute l'API, avec un petit délai pour ne pas
-  // spammer le backend à chaque frappe
   useEffect(() => {
     const trimmed = searchQuery.trim();
 
@@ -114,6 +112,10 @@ function LibraryPage({ onSelectSeason, animeStatuses }) {
   }
 
   const showingSearch = searchQuery.trim().length >= 2;
+
+  const selectedIsFavorite = selectedSearchAnime
+    ? animeStatuses.some((s) => s.animeId === selectedSearchAnime.id && s.favorite)
+    : false;
 
   return (
     <div>
@@ -206,6 +208,8 @@ function LibraryPage({ onSelectSeason, animeStatuses }) {
         anime={selectedSearchAnime}
         onClose={() => setSelectedSearchAnime(null)}
         onGoToSeason={handleGoToSeason}
+        isFavorite={selectedIsFavorite}
+        onToggleFavorite={onToggleFavorite}
       />
     </div>
   );

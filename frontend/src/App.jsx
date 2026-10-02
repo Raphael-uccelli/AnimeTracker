@@ -232,12 +232,27 @@ function App() {
     pushHistoryEntry();
   }
 
+  function toggleFavoriteForAnime(anime) {
+    if (!anime) return;
+
+    setAnimeStatuses((currentStatuses) => {
+      const existingStatus = currentStatuses.find((s) => s.animeId === anime.id);
+
+      if (existingStatus) {
+        return currentStatuses.map((s) =>
+          s.animeId === anime.id ? { ...s, favorite: !s.favorite, anime } : s
+        );
+      }
+
+      return [
+        ...currentStatuses,
+        { animeId: anime.id, status: "UNSEEN", favorite: true, pinned: false, anime }
+      ];
+    });
+  }
+
   function handleFavorite() {
-    upsertStatus((s) => ({
-      ...s,
-      favorite: !s.favorite,
-      anime: currentAnime
-    }));
+    toggleFavoriteForAnime(currentAnime);
   }
 
   function handleTogglePin(animeId) {
@@ -284,7 +299,7 @@ function App() {
             <button onClick={goToLibrary} className="icon-button" title="Bibliothèque">
               📚
             </button>
-            {view !== "library" && (
+            {view === "swipe" && (
               <button onClick={() => setView("search")} className="icon-button" title="Rechercher">
                 🔍
               </button>
@@ -299,7 +314,11 @@ function App() {
       {view === "home" && <HomePage onStart={() => setView("library")} />}
 
       {view === "library" && (
-        <LibraryPage onSelectSeason={handleSelectSeason} animeStatuses={animeStatuses} />
+        <LibraryPage
+          onSelectSeason={handleSelectSeason}
+          animeStatuses={animeStatuses}
+          onToggleFavorite={toggleFavoriteForAnime}
+        />
       )}
 
       {view === "search" && (
@@ -416,10 +435,7 @@ function App() {
                 </>
               )}
 
-              <p>Vus : {watchedCount}</p>
-              <p>Pas intéressés : {notInterestedCount}</p>
-              <p>Favoris : {favoriteCount}</p>
-            </>
+                          </>
           )}
         </>
       )}
