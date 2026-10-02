@@ -29,7 +29,13 @@ function AnimeCard({ anime, onSeen, onNotInterested, onFavorite, isFavorite }) {
     }
   }
 
-  function handleTap() {
+  function handleTap(event) {
+    // Ignore le tap s'il provient d'un bouton d'action (évite le conflit
+    // avec le spam vu/pas-vu qui déclenchait le favori par erreur)
+    if (event.target.closest(".action-btn")) {
+      return;
+    }
+
     const now = Date.now();
 
     if (now - lastTapRef.current < 300) {

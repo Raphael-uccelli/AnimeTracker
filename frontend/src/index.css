@@ -87,11 +87,23 @@ h1, h2, h3 {
   box-shadow: 0 0 28px rgba(90, 190, 255, 0.7);
 }
 
+.modal-go-to-season {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  font-size: 14px;
+}
+
 /* --- Bibliothèque --- */
 
 .library-intro {
   color: #9a9aa8;
-  margin-bottom: 20px;
+  margin: 14px 0 20px;
+}
+
+.library-search-results {
+  margin-top: 16px;
 }
 
 .year-list {
@@ -132,6 +144,7 @@ h1, h2, h3 {
 }
 
 .season-button {
+  position: relative;
   padding: 14px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -145,6 +158,27 @@ h1, h2, h3 {
 .season-button:hover {
   border-color: rgba(90, 190, 255, 0.6);
   box-shadow: 0 0 12px rgba(90, 190, 255, 0.35);
+}
+
+.season-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 14px;
+  background: #0d0d14;
+  border-radius: 50%;
+  padding: 3px;
+  line-height: 1;
+}
+
+.season-badge.new {
+  animation: pulse-badge 1.5s infinite;
+}
+
+@keyframes pulse-badge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
 /* --- Top bar --- */
@@ -336,6 +370,16 @@ h1, h2, h3 {
   pointer-events: none;
 }
 
+.heart-pop {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 90px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 20px rgba(255, 90, 90, 0.6));
+}
+
 .anime-card-content {
   flex: 1;
   display: flex;
@@ -443,6 +487,133 @@ h1, h2, h3 {
   cursor: not-allowed;
 }
 
+/* --- En-tête de liste (titre + toggle vue) --- */
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.list-header h2 {
+  margin: 0;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.view-toggle-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #14141c;
+  color: #b8b8c4;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.view-toggle-btn.active {
+  border-color: rgba(90, 190, 255, 0.7);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(90, 190, 255, 0.4);
+}
+
+/* --- Épinglage --- */
+
+.pinned-section {
+  margin-bottom: 22px;
+}
+
+.pinned-strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.pinned-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 110px;
+  cursor: pointer;
+}
+
+.pinned-item img {
+  width: 110px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 210, 90, 0.4);
+}
+
+.pinned-item p {
+  font-size: 12px;
+  margin: 6px 0 0;
+  color: #e6e6e6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pin-badge {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #1c1c26;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-badge.active {
+  border-color: rgba(255, 210, 90, 0.7);
+  box-shadow: 0 0 10px rgba(255, 210, 90, 0.4);
+}
+
+/* Bouton épingler en vue liste : grande zone de clic bien séparée du texte */
+.list-pin {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+/* Bouton épingler sur les vignettes épinglées en haut : agrandi aussi */
+.pinned-item-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  background: rgba(10, 10, 15, 0.85);
+}
+
+/* Bouton épingler en vue grille : barre pleine largeur en bas de la vignette,
+   beaucoup plus facile à viser qu'un petit rond au coin */
+.grid-pin-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 7px 0;
+  border: none;
+  background: rgba(10, 10, 15, 0.85);
+  color: #e6e6e6;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.grid-pin-bar:active {
+  background: rgba(255, 210, 90, 0.35);
+}
+
 /* --- Listes + chapitres --- */
 
 .chapter-group {
@@ -499,6 +670,12 @@ h1, h2, h3 {
   height: 60px;
   object-fit: cover;
   border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.favorite-item-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .favorite-item h3 {
@@ -510,6 +687,40 @@ h1, h2, h3 {
   margin: 0;
   color: #9a9aa8;
   font-size: 13px;
+}
+
+/* --- Vue grille --- */
+
+.anime-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.grid-item {
+  position: relative;
+  background: #14141c;
+  border: 1px solid rgba(90, 190, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.grid-item img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.grid-item p {
+  font-size: 11px;
+  padding: 6px;
+  margin: 0;
+  color: #e6e6e6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* --- Popup détails / genres --- */
@@ -625,14 +836,4 @@ h1, h2, h3 {
 
 .bottom-nav button:hover {
   color: #cfe9ff;
-}
-
-.heart-pop {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 90px;
-  pointer-events: none;
-  filter: drop-shadow(0 0 20px rgba(255, 90, 90, 0.6));
 }

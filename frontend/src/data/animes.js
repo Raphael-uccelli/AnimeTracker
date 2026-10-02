@@ -39,3 +39,21 @@ export async function fetchAnimesForSeason(year, season) {
 
   return data.map(mapAnimeForUi);
 }
+
+export async function fetchAnimeSearch(query) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/anime/search?q=${encodeURIComponent(query)}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (!Array.isArray(data)) {
+    throw new Error("Format de reponse invalide");
+  }
+
+  return data.map(mapAnimeForUi);
+}

@@ -1,4 +1,4 @@
-function AnimeDetailsModal({ anime, onClose }) {
+function AnimeDetailsModal({ anime, onClose, onGoToSeason }) {
   if (!anime) return null;
 
   return (
@@ -26,6 +26,15 @@ function AnimeDetailsModal({ anime, onClose }) {
         )}
 
         <p>{anime.synopsis}</p>
+
+        {onGoToSeason && (
+          <button
+            className="start-button modal-go-to-season"
+            onClick={() => onGoToSeason(anime)}
+          >
+            📅 Aller à sa saison
+          </button>
+        )}
       </div>
     </div>
   );

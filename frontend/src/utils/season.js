@@ -5,7 +5,7 @@ export function getSeasonInfo(startDate) {
 
   const date = new Date(startDate);
   const year = date.getFullYear();
-  const month = date.getMonth(); // 0-11
+  const month = date.getMonth();
 
   let seasonIndex;
   let seasonLabel;
@@ -49,7 +49,13 @@ export function groupByChapters(animes) {
     groups.get(info.sortKey).animes.push(anime);
   });
 
-  return Array.from(groups.values()).sort((a, b) => b.sortKey - a.sortKey);
+  const chapters = Array.from(groups.values()).sort((a, b) => b.sortKey - a.sortKey);
+
+  chapters.forEach((chapter) => {
+    chapter.animes.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+  });
+
+  return chapters;
 }
 
 export const SEASONS = [
@@ -58,3 +64,17 @@ export const SEASONS = [
   { key: "summer", label: "☀️ Été" },
   { key: "fall", label: "🍂 Automne" }
 ];
+
+export function getCurrentSeasonKey() {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+
+  let season;
+  if (month <= 2) season = "winter";
+  else if (month <= 5) season = "spring";
+  else if (month <= 8) season = "summer";
+  else season = "fall";
+
+  return { year, season };
+}

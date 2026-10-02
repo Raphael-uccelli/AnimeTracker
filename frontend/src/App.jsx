@@ -34,8 +34,6 @@ function App() {
 
   const [swipeHistory, setSwipeHistory] = useState([]);
 
-  // Ref pour toujours avoir la dernière version de handleBack disponible
-  // dans l'écouteur popstate (évite les closures obsolètes)
   const handleBackRef = useRef(() => {});
 
   const favoriteAnimes = animeStatuses
@@ -50,14 +48,7 @@ function App() {
     .filter((s) => s.status === "NOT_INTERESTED" && s.anime)
     .map((s) => s.anime);
 
-  const combinedAnimes = useMemo(() => {
-    const map = new Map();
-    animes.forEach((anime) => map.set(anime.id, anime));
-    animeStatuses.forEach((s) => {
-      if (s.anime) map.set(s.anime.id, s.anime);
-    });
-    return Array.from(map.values());
-  }, [animes, animeStatuses]);
+  const pinnedIds = animeStatuses.filter((s) => s.pinned).map((s) => s.animeId);
 
   const allGenres = useMemo(() => {
     const genreSet = new Set();
@@ -128,6 +119,15 @@ function App() {
 
         setAnimes(seasonAnimes);
         setSelectedGenres([]);
+
+        try {
+          localStorage.setItem(
+            `animeTracker_seasonSnapshot_${selectedYear}_${selectedSeason}`,
+            JSON.stringify(seasonAnimes.map((a) => a.id))
+          );
+        } catch (storageError) {
+          console.error("Impossible de sauvegarder l'instantané de saison :", storageError);
+        }
       } catch (error) {
         if (!isMounted) return;
 
@@ -176,11 +176,8 @@ function App() {
     });
   }
 
-  // Garde toujours une version à jour de handleBack disponible pour l'écouteur
   handleBackRef.current = handleBack;
 
-  // Bouton retour matériel (Android) : annule le dernier swipe au lieu de
-  // quitter l'app, tant qu'il y a quelque chose à annuler.
   useEffect(() => {
     function onPopState() {
       handleBackRef.current();
@@ -214,6 +211,7 @@ function App() {
           animeId: currentAnime.id,
           status: "UNSEEN",
           favorite: false,
+          pinned: false,
           anime: currentAnime
         })
       ];
@@ -240,6 +238,14 @@ function App() {
       favorite: !s.favorite,
       anime: currentAnime
     }));
+  }
+
+  function handleTogglePin(animeId) {
+    setAnimeStatuses((current) =>
+      current.map((s) =>
+        s.animeId === animeId ? { ...s, pinned: !s.pinned } : s
+      )
+    );
   }
 
   function handleHardReset() {
@@ -278,9 +284,11 @@ function App() {
             <button onClick={goToLibrary} className="icon-button" title="Bibliothèque">
               📚
             </button>
-            <button onClick={() => setView("search")} className="icon-button" title="Rechercher">
-              🔍
-            </button>
+            {view !== "library" && (
+              <button onClick={() => setView("search")} className="icon-button" title="Rechercher">
+                🔍
+              </button>
+            )}
             <button onClick={handleHardReset} className="reset-button">
               🔄 Reset
             </button>
@@ -290,11 +298,13 @@ function App() {
 
       {view === "home" && <HomePage onStart={() => setView("library")} />}
 
-      {view === "library" && <LibraryPage onSelectSeason={handleSelectSeason} />}
+      {view === "library" && (
+        <LibraryPage onSelectSeason={handleSelectSeason} animeStatuses={animeStatuses} />
+      )}
 
       {view === "search" && (
         <SearchPage
-          animes={combinedAnimes}
+          animes={animes}
           animeStatuses={animeStatuses}
           onBack={backFromList}
         />
@@ -306,6 +316,9 @@ function App() {
           animes={favoriteAnimes}
           emptyMessage="Aucun favori pour l'instant."
           onBack={backFromList}
+          enablePin
+          pinnedIds={pinnedIds}
+          onTogglePin={handleTogglePin}
         />
       )}
 

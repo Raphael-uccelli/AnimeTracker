@@ -43,7 +43,7 @@ function SearchPage({ animes, animeStatuses, onBack }) {
       />
 
       <p className="search-hint">
-        Recherche dans la saison actuellement chargée et dans tout ce que tu as déjà trié.
+        Recherche uniquement dans les animés de la saison actuellement affichée.
       </p>
 
       {normalizedQuery && results.length === 0 && (
@@ -58,7 +58,7 @@ function SearchPage({ animes, animeStatuses, onBack }) {
             onClick={() => setSelectedAnime(anime)}
           >
             <img src={anime.image} alt={`Image de ${anime.title}`} />
-            <div>
+            <div className="favorite-item-text">
               <h3>{anime.title}</h3>
               <p>
                 {anime.releaseDate} · {getStatusLabel(anime)}
