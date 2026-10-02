@@ -323,6 +323,7 @@ h1, h2, h3 {
   justify-content: center;
   touch-action: pan-y;
   overscroll-behavior: contain;
+  position: relative;
 }
 
 .anime-card-image img {
@@ -624,4 +625,14 @@ h1, h2, h3 {
 
 .bottom-nav button:hover {
   color: #cfe9ff;
+}
+
+.heart-pop {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 90px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 20px rgba(255, 90, 90, 0.6));
 }

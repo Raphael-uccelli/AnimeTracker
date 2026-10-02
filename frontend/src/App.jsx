@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import HomePage from "./components/HomePage";
 import LibraryPage from "./components/LibraryPage";
 import AnimeListPage from "./components/AnimeListPage";
@@ -22,7 +22,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // "home" | "library" | "swipe" | "favorites" | "watched" | "notInterested" | "search"
   const [view, setView] = useState("home");
 
   const [selectedYear, setSelectedYear] = useState(null);
@@ -33,8 +32,11 @@ function App() {
   const [sortOption, setSortOption] = useState("newest");
   const [showGenreModal, setShowGenreModal] = useState(false);
 
-  // Historique des cartes swipées (dans cette session), pour le bouton "retour"
   const [swipeHistory, setSwipeHistory] = useState([]);
+
+  // Ref pour toujours avoir la dernière version de handleBack disponible
+  // dans l'écouteur popstate (évite les closures obsolètes)
+  const handleBackRef = useRef(() => {});
 
   const favoriteAnimes = animeStatuses
     .filter((s) => s.favorite && s.anime)
@@ -98,8 +100,6 @@ function App() {
     return list;
   }, [animes, selectedGenres, sortOption]);
 
-  // Source de vérité unique pour la carte affichée : la première sans statut
-  // (ou en UNSEEN) dans la liste triée. Plus d'index séparé à synchroniser.
   const currentAnime = useMemo(() => {
     return sortedFilteredAnimes.find((anime) => {
       const status = animeStatuses.find((s) => s.animeId === anime.id);
@@ -107,12 +107,10 @@ function App() {
     });
   }, [sortedFilteredAnimes, animeStatuses]);
 
-  // Sauvegarder à chaque changement de statuts
   useEffect(() => {
     localStorage.setItem("animeTracker_statuses", JSON.stringify(animeStatuses));
   }, [animeStatuses]);
 
-  // Charger la saison choisie
   useEffect(() => {
     if (!selectedYear || !selectedSeason) return;
 
@@ -163,17 +161,37 @@ function App() {
   }
 
   function handleBack() {
-    if (swipeHistory.length === 0) return;
+    setSwipeHistory((history) => {
+      if (history.length === 0) return history;
 
-    const lastId = swipeHistory[swipeHistory.length - 1];
+      const lastId = history[history.length - 1];
 
-    setSwipeHistory((history) => history.slice(0, -1));
+      setAnimeStatuses((currentStatuses) =>
+        currentStatuses.map((s) =>
+          s.animeId === lastId ? { ...s, status: "UNSEEN" } : s
+        )
+      );
 
-    setAnimeStatuses((currentStatuses) =>
-      currentStatuses.map((s) =>
-        s.animeId === lastId ? { ...s, status: "UNSEEN" } : s
-      )
-    );
+      return history.slice(0, -1);
+    });
+  }
+
+  // Garde toujours une version à jour de handleBack disponible pour l'écouteur
+  handleBackRef.current = handleBack;
+
+  // Bouton retour matériel (Android) : annule le dernier swipe au lieu de
+  // quitter l'app, tant qu'il y a quelque chose à annuler.
+  useEffect(() => {
+    function onPopState() {
+      handleBackRef.current();
+    }
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  function pushHistoryEntry() {
+    window.history.pushState({ animeTrackerSwipe: true }, "");
   }
 
   function upsertStatus(updater) {
@@ -206,12 +224,14 @@ function App() {
     if (!currentAnime) return;
     upsertStatus((s) => ({ ...s, status: "WATCHED", anime: currentAnime }));
     setSwipeHistory((history) => [...history, currentAnime.id]);
+    pushHistoryEntry();
   }
 
   function handleNotInterested() {
     if (!currentAnime) return;
     upsertStatus((s) => ({ ...s, status: "NOT_INTERESTED", anime: currentAnime }));
     setSwipeHistory((history) => [...history, currentAnime.id]);
+    pushHistoryEntry();
   }
 
   function handleFavorite() {
