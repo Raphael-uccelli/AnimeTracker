@@ -1,22 +1,35 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 
 function AnimeCard({ anime, onSeen, onNotInterested, onFavorite, isFavorite }) {
+  const cardRef = useRef(null);
+
   function handleDragEnd(event, info) {
-    if (info.offset.x > 120) {
+    const cardWidth = cardRef.current?.offsetWidth || 300;
+    const offsetThreshold = cardWidth * 0.35; // 35% de la largeur de la carte
+    const velocityThreshold = 500; // px/s — détecte un "flick" rapide
+
+    const swipedRight =
+      info.offset.x > offsetThreshold || info.velocity.x > velocityThreshold;
+    const swipedLeft =
+      info.offset.x < -offsetThreshold || info.velocity.x < -velocityThreshold;
+
+    if (swipedRight) {
       onSeen();
-    } else if (info.offset.x < -120) {
+    } else if (swipedLeft) {
       onNotInterested();
     }
   }
 
   return (
     <motion.div
+      ref={cardRef}
       className="anime-card"
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.7}
+      dragElastic={1}
       onDragEnd={handleDragEnd}
-      whileDrag={{ scale: 1.03, rotate: 3 }}
+      whileDrag={{ scale: 1.02, rotate: 2 }}
     >
       <div className="anime-card-image">
         <img

@@ -1,3 +1,17 @@
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+button:focus-visible {
+  outline: 2px solid rgba(90, 190, 255, 0.8);
+  outline-offset: 2px;
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
@@ -293,6 +307,11 @@ h1, h2, h3 {
     0 8px 30px rgba(0, 0, 0, 0.6);
   cursor: grab;
   touch-action: pan-y;
+  will-change: transform;
+}
+
+.anime-card:active {
+  cursor: grabbing;
 }
 
 .anime-card-image {
@@ -302,6 +321,8 @@ h1, h2, h3 {
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .anime-card-image img {
@@ -338,6 +359,8 @@ h1, h2, h3 {
   overflow-y: auto;
   padding-right: 6px;
   margin-bottom: 12px;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .anime-synopsis p {
