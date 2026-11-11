@@ -22,6 +22,17 @@ function mapAnimeForUi(anime) {
   };
 }
 
+// Sécurité : garantit qu'un même id n'apparaît qu'une fois (clés React uniques)
+function dedupeById(list) {
+  const seen = new Set();
+
+  return list.filter((anime) => {
+    if (seen.has(anime.id)) return false;
+    seen.add(anime.id);
+    return true;
+  });
+}
+
 export async function fetchAnimesForSeason(year, season) {
   const response = await fetch(
     `${API_BASE_URL}/api/anime/season?year=${year}&season=${season}`
@@ -37,7 +48,7 @@ export async function fetchAnimesForSeason(year, season) {
     throw new Error("Format de reponse invalide");
   }
 
-  return data.map(mapAnimeForUi);
+  return dedupeById(data).map(mapAnimeForUi);
 }
 
 export async function fetchAnimeSearch(query) {
@@ -55,5 +66,5 @@ export async function fetchAnimeSearch(query) {
     throw new Error("Format de reponse invalide");
   }
 
-  return data.map(mapAnimeForUi);
+  return dedupeById(data).map(mapAnimeForUi);
 }

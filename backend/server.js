@@ -59,6 +59,7 @@ function buildCategoryMap(included) {
 
 async function fetchSeasonFromKitsu(year, season) {
   const results = [];
+  const seenIds = new Set();
   let offset = 0;
   let pageCount = 0;
 
@@ -79,10 +80,14 @@ async function fetchSeasonFromKitsu(year, season) {
     const categoryNameById = buildCategoryMap(response.data.included);
 
     for (const item of page) {
+      // Kitsu peut renvoyer le même anime sur deux pages différentes
+      if (seenIds.has(item.id)) continue;
+
       const subtype = item.attributes.subtype;
       if (subtype !== "TV" && subtype !== "movie") continue;
       if (!item.attributes.startDate) continue;
 
+      seenIds.add(item.id);
       results.push(mapKitsuAnime(item, categoryNameById));
     }
 
@@ -158,14 +163,20 @@ app.get("/api/anime/search", async (req, res) => {
     });
 
     const categoryNameById = buildCategoryMap(response.data.included);
+    const seenIds = new Set();
 
     const results = response.data.data
-      .filter(
-        (item) =>
+      .filter((item) => {
+        if (seenIds.has(item.id)) return false;
+
+        const isValid =
           (item.attributes.subtype === "TV" ||
             item.attributes.subtype === "movie") &&
-          item.attributes.startDate
-      )
+          item.attributes.startDate;
+
+        if (isValid) seenIds.add(item.id);
+        return isValid;
+      })
       .map((item) => mapKitsuAnime(item, categoryNameById));
 
     searchCache.set(cacheKey, { data: results, timestamp: now });

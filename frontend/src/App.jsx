@@ -3,7 +3,7 @@ import HomePage from "./components/HomePage";
 import LibraryPage from "./components/LibraryPage";
 import AnimeListPage from "./components/AnimeListPage";
 import SearchPage from "./components/SearchPage";
-import GenreFilterModal from "./components/GenreFilterModal";
+import FiltersModal from "./components/FiltersModal";
 import AnimeCard from "./components/AnimeCard";
 import { fetchAnimesForSeason } from "./data/animes";
 
@@ -22,6 +22,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // "home" | "library" | "swipe" | "favorites" | "watched" | "notInterested" | "search"
   const [view, setView] = useState("home");
 
   const [selectedYear, setSelectedYear] = useState(null);
@@ -30,11 +31,14 @@ function App() {
   const [animeStatuses, setAnimeStatuses] = useState(loadSavedStatuses);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [sortOption, setSortOption] = useState("newest");
-  const [showGenreModal, setShowGenreModal] = useState(false);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [swipeHistory, setSwipeHistory] = useState([]);
 
   const handleBackRef = useRef(() => {});
+  const isFullscreenRef = useRef(false);
+  isFullscreenRef.current = isFullscreen;
 
   const favoriteAnimes = animeStatuses
     .filter((s) => s.favorite && s.anime)
@@ -56,19 +60,6 @@ function App() {
       (anime.genres || []).forEach((genre) => genreSet.add(genre));
     });
     return Array.from(genreSet).sort();
-  }, [animes]);
-
-  const topGenres = useMemo(() => {
-    const frequency = {};
-    animes.forEach((anime) => {
-      (anime.genres || []).forEach((genre) => {
-        frequency[genre] = (frequency[genre] || 0) + 1;
-      });
-    });
-    return Object.entries(frequency)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([genre]) => genre);
   }, [animes]);
 
   const sortedFilteredAnimes = useMemo(() => {
@@ -97,6 +88,9 @@ function App() {
       return !status || status.status === "UNSEEN";
     });
   }, [sortedFilteredAnimes, animeStatuses]);
+
+  const activeFiltersCount =
+    selectedGenres.length + (sortOption !== "newest" ? 1 : 0);
 
   useEffect(() => {
     localStorage.setItem("animeTracker_statuses", JSON.stringify(animeStatuses));
@@ -146,6 +140,13 @@ function App() {
     };
   }, [selectedYear, selectedSeason]);
 
+  // Sort du plein écran si on quitte la vue swipe ou s'il n'y a plus de carte
+  useEffect(() => {
+    if (isFullscreen && (view !== "swipe" || !currentAnime)) {
+      setIsFullscreen(false);
+    }
+  }, [isFullscreen, view, currentAnime]);
+
   function handleSelectSeason(year, season) {
     setSelectedYear(year);
     setSelectedSeason(season);
@@ -178,8 +179,13 @@ function App() {
 
   handleBackRef.current = handleBack;
 
+  // Bouton retour Android : quitte d'abord le plein écran, sinon annule le dernier swipe
   useEffect(() => {
     function onPopState() {
+      if (isFullscreenRef.current) {
+        setIsFullscreen(false);
+        return;
+      }
       handleBackRef.current();
     }
 
@@ -189,6 +195,16 @@ function App() {
 
   function pushHistoryEntry() {
     window.history.pushState({ animeTrackerSwipe: true }, "");
+  }
+
+  function enterFullscreen() {
+    window.history.pushState({ animeTrackerFullscreen: true }, "");
+    setIsFullscreen(true);
+  }
+
+  function exitFullscreen() {
+    // Consomme l'entrée d'historique ; le handler popstate coupe le plein écran
+    window.history.back();
   }
 
   function upsertStatus(updater) {
@@ -326,6 +342,7 @@ function App() {
           animes={animes}
           animeStatuses={animeStatuses}
           onBack={backFromList}
+          onToggleFavorite={toggleFavoriteForAnime}
         />
       )}
 
@@ -367,48 +384,50 @@ function App() {
 
           {!isLoading && !errorMessage && (
             <>
-              {topGenres.length > 0 && (
-                <>
-                  <h3 className="section-title">Genres</h3>
-                  <div className="genre-filter-bar">
-                    {topGenres.map((genre) => (
-                      <button
-                        key={genre}
-                        className={
-                          selectedGenres.includes(genre)
-                            ? "genre-pill active"
-                            : "genre-pill"
-                        }
-                        onClick={() => toggleGenre(genre)}
-                      >
-                        {genre}
-                      </button>
-                    ))}
+              <div className="swipe-toolbar">
+                <button
+                  className="toolbar-btn"
+                  onClick={handleBack}
+                  disabled={swipeHistory.length === 0}
+                  title="Annuler le dernier swipe"
+                >
+                  ↩️ Annuler
+                </button>
 
-                    <button
-                      className="genre-pill more-button"
-                      onClick={() => setShowGenreModal(true)}
-                    >
-                      + ...
-                    </button>
-                  </div>
-                </>
-              )}
+                <div className="toolbar-right">
+                  <button
+                    className="toolbar-btn"
+                    onClick={() => setShowFiltersModal(true)}
+                  >
+                    ⚙️ Filtres
+                    {activeFiltersCount > 0 && (
+                      <span className="toolbar-badge">{activeFiltersCount}</span>
+                    )}
+                  </button>
 
-              <select
-                className="sort-select"
-                value={sortOption}
-                onChange={(event) => setSortOption(event.target.value)}
-              >
-                <option value="newest">Plus récent → plus vieux</option>
-                <option value="rating">Mieux notés</option>
-                <option value="oldest">Plus vieux → plus récent</option>
-              </select>
+                  <button
+                    className="toolbar-btn icon"
+                    onClick={enterFullscreen}
+                    disabled={!currentAnime}
+                    title="Plein écran"
+                  >
+                    ⛶
+                  </button>
+                </div>
+              </div>
 
               {!currentAnime && (
                 <>
-                  <h2>🎉 Saison terminée !</h2>
-                  <p>Tu as parcouru tous les anime de cette saison.</p>
+                  <h2>
+                    {selectedGenres.length > 0
+                      ? "Plus aucune carte pour ces genres"
+                      : "🎉 Saison terminée !"}
+                  </h2>
+                  <p>
+                    {selectedGenres.length > 0
+                      ? "Retire un filtre pour revoir les cartes restantes."
+                      : "Tu as parcouru tous les anime de cette saison."}
+                  </p>
                   <button onClick={goToLibrary} className="back-button">
                     📚 Choisir une autre saison
                   </button>
@@ -416,14 +435,21 @@ function App() {
               )}
 
               {currentAnime && (
-                <>
-                  <button
-                    onClick={handleBack}
-                    disabled={swipeHistory.length === 0}
-                    className="back-button"
-                  >
-                    ↩️ Revenir en arrière
-                  </button>
+                <div className={isFullscreen ? "card-stage fullscreen" : "card-stage"}>
+                  {isFullscreen && (
+                    <div className="fullscreen-toolbar">
+                      <button
+                        className="toolbar-btn"
+                        onClick={handleBack}
+                        disabled={swipeHistory.length === 0}
+                      >
+                        ↩️ Annuler
+                      </button>
+                      <button className="toolbar-btn" onClick={exitFullscreen}>
+                        ✕ Quitter
+                      </button>
+                    </div>
+                  )}
 
                   <AnimeCard
                     anime={currentAnime}
@@ -431,21 +457,24 @@ function App() {
                     onNotInterested={handleNotInterested}
                     onFavorite={handleFavorite}
                     isFavorite={currentAnimeStatus?.favorite ?? false}
+                    isFullscreen={isFullscreen}
                   />
-                </>
+                </div>
               )}
-
-                          </>
+            </>
           )}
         </>
       )}
 
-      {showGenreModal && (
-        <GenreFilterModal
+      {showFiltersModal && (
+        <FiltersModal
           allGenres={allGenres}
           selectedGenres={selectedGenres}
           onToggleGenre={toggleGenre}
-          onClose={() => setShowGenreModal(false)}
+          onClearGenres={() => setSelectedGenres([])}
+          sortOption={sortOption}
+          onChangeSort={setSortOption}
+          onClose={() => setShowFiltersModal(false)}
         />
       )}
 

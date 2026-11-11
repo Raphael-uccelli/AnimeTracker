@@ -1,17 +1,30 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AnimeDetailsModal from "./AnimeDetailsModal";
 
-function SearchPage({ animes, animeStatuses, onBack }) {
+function normalizeText(value) {
+  return (value || "")
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function SearchPage({ animes, animeStatuses, onBack, onToggleFavorite }) {
   const [query, setQuery] = useState("");
   const [selectedAnime, setSelectedAnime] = useState(null);
 
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = normalizeText(query);
 
-  const results = normalizedQuery
-    ? animes.filter((anime) =>
-        anime.title?.toLowerCase().includes(normalizedQuery)
-      )
-    : [];
+  const results = useMemo(() => {
+    if (!normalizedQuery) return [];
+
+    return animes.filter(
+      (anime) =>
+        normalizeText(anime.title).includes(normalizedQuery) ||
+        normalizeText(anime.japaneseTitle).includes(normalizedQuery)
+    );
+  }, [animes, normalizedQuery]);
 
   function getStatusLabel(anime) {
     const status = animeStatuses.find((s) => s.animeId === anime.id);
@@ -25,13 +38,17 @@ function SearchPage({ animes, animeStatuses, onBack }) {
     return labels.join(" · ");
   }
 
+  const selectedIsFavorite = selectedAnime
+    ? animeStatuses.some((s) => s.animeId === selectedAnime.id && s.favorite)
+    : false;
+
   return (
     <div>
       <button onClick={onBack} className="back-button">
         ↩️ Retour
       </button>
 
-      <h2>🔍 Recherche</h2>
+      <h2>🔍 Recherche dans la saison</h2>
 
       <input
         type="text"
@@ -43,7 +60,9 @@ function SearchPage({ animes, animeStatuses, onBack }) {
       />
 
       <p className="search-hint">
-        Recherche uniquement dans les animés de la saison actuellement affichée.
+        {normalizedQuery
+          ? `${results.length} résultat(s) sur ${animes.length} animés de cette saison`
+          : `Recherche dans les ${animes.length} animés de la saison affichée.`}
       </p>
 
       {normalizedQuery && results.length === 0 && (
@@ -71,6 +90,9 @@ function SearchPage({ animes, animeStatuses, onBack }) {
       <AnimeDetailsModal
         anime={selectedAnime}
         onClose={() => setSelectedAnime(null)}
+        isFavorite={selectedIsFavorite}
+        onToggleFavorite={onToggleFavorite}
+        compact
       />
     </div>
   );

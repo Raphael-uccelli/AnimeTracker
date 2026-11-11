@@ -23,7 +23,7 @@ body {
 main {
   max-width: 500px;
   margin: 0 auto;
-  padding: 40px 20px 110px;
+  padding: 20px 16px 96px;
 }
 
 h1, h2, h3 {
@@ -179,7 +179,7 @@ h1, h2, h3 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .top-bar h1 {
@@ -224,7 +224,67 @@ h1, h2, h3 {
   box-shadow: 0 0 10px rgba(255, 90, 90, 0.4);
 }
 
-/* --- Genres --- */
+/* --- Barre d'outils du swipe --- */
+
+.swipe-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(90, 190, 255, 0.35);
+  background: rgba(90, 190, 255, 0.08);
+  color: #cfe9ff;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.toolbar-btn.icon {
+  width: 36px;
+  padding: 0;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  box-shadow: 0 0 12px rgba(90, 190, 255, 0.4);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.toolbar-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #5ab4ff;
+  color: #0a0a0f;
+  font-size: 11px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Genres / tri (dans la popup Filtres) --- */
 
 .section-title {
   margin: 4px 0 8px;
@@ -234,22 +294,11 @@ h1, h2, h3 {
   letter-spacing: 1px;
 }
 
-.genre-filter-bar {
+.sort-options {
   display: flex;
   gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  margin-bottom: 14px;
-}
-
-.genre-filter-bar::-webkit-scrollbar {
-  height: 4px;
-}
-
-.genre-filter-bar::-webkit-scrollbar-thumb {
-  background: rgba(90, 190, 255, 0.4);
-  border-radius: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 
 .genre-pill {
@@ -275,31 +324,11 @@ h1, h2, h3 {
   box-shadow: 0 0 10px rgba(90, 190, 255, 0.4);
 }
 
-.genre-pill.more-button {
-  font-weight: bold;
-  border-style: dashed;
-}
-
 .genre-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
-}
-
-/* --- Tri --- */
-
-.sort-select {
-  display: block;
-  width: 100%;
-  margin-bottom: 16px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(90, 190, 255, 0.35);
-  background: #14141c;
-  color: #e6e6e6;
-  font-size: 14px;
-  cursor: pointer;
 }
 
 /* --- Recherche --- */
@@ -331,7 +360,10 @@ h1, h2, h3 {
 /* --- Carte anime --- */
 
 .anime-card {
-  height: 820px;
+  height: calc(100vh - 222px);
+  height: calc(100dvh - 222px);
+  min-height: 440px;
+  max-height: 780px;
   display: flex;
   flex-direction: column;
   background: #14141c;
@@ -351,62 +383,98 @@ h1, h2, h3 {
   cursor: grabbing;
 }
 
+/* L'image prend toute la hauteur que la description et les boutons ne prennent pas */
 .anime-card-image {
-  height: 480px;
-  flex-shrink: 0;
-  background: #1c1c26;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  touch-action: pan-y;
-  overscroll-behavior: contain;
+  flex: 1 1 0;
+  min-height: 160px;
   position: relative;
+  overflow: hidden;
+  background: #1c1c26;
+  cursor: zoom-in;
 }
 
 .anime-card-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center 25%;
   display: block;
   -webkit-user-drag: none;
   user-select: none;
   pointer-events: none;
 }
 
-.heart-pop {
+.no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 48px;
+  color: #44445a;
+  background: #1c1c26;
+}
+
+.anime-card-image .no-image {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 90px;
-  pointer-events: none;
-  filter: drop-shadow(0 0 20px rgba(255, 90, 90, 0.6));
+  top: 0;
+  left: 0;
+}
+
+.zoom-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(10, 10, 15, 0.7);
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.zoom-btn:hover {
+  box-shadow: 0 0 12px rgba(90, 190, 255, 0.6);
 }
 
 .anime-card-content {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  padding: 18px 20px;
-  min-height: 0;
+  padding: 12px 16px 14px;
 }
 
 .anime-card-content h2 {
-  margin: 0 0 6px;
-  font-size: 20px;
+  margin: 0 0 4px;
+  font-size: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .anime-meta {
   color: #7fbfff;
   font-size: 13px;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
 }
 
+/* Description courte (4 lignes) : scrollable au besoin */
 .anime-synopsis {
-  flex: 1;
+  flex: none;
+  max-height: 84px;
   overflow-y: auto;
   padding-right: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   touch-action: pan-y;
   overscroll-behavior: auto;
 }
@@ -431,12 +499,12 @@ h1, h2, h3 {
   display: flex;
   justify-content: space-around;
   flex-shrink: 0;
-  padding-top: 8px;
+  padding-top: 4px;
 }
 
 .action-btn {
-  width: 58px;
-  height: 58px;
+  width: 56px;
+  height: 56px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 50%;
   background: #1c1c26;
@@ -465,6 +533,127 @@ h1, h2, h3 {
 .action-btn.favorite:hover {
   box-shadow: 0 0 16px rgba(255, 200, 90, 0.5);
   border-color: rgba(255, 200, 90, 0.5);
+}
+
+/* --- Cœur "like" (carte swipe + modales) --- */
+
+.heart-pop-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 90px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 20px rgba(255, 90, 90, 0.6));
+  z-index: 3;
+}
+
+.heart-pop-wrap.css-anim {
+  animation: heart-burst 0.7s ease-out forwards;
+}
+
+@keyframes heart-burst {
+  0% { opacity: 0; transform: scale(0.5); }
+  30% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+
+/* --- Plein écran : image entière, description courte, boutons en bas --- */
+
+.card-stage.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1100;
+  background: #0a0a0f;
+  display: flex;
+  flex-direction: column;
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 10px)
+    12px
+    calc(env(safe-area-inset-bottom, 0px) + 10px);
+}
+
+.fullscreen-toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.card-stage.fullscreen .anime-card {
+  flex: 1;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+}
+
+.card-stage.fullscreen .anime-card-image {
+  cursor: default;
+}
+
+.card-stage.fullscreen .anime-card-image img {
+  object-fit: contain;
+  object-position: center;
+}
+
+.card-stage.fullscreen .anime-card-content {
+  padding: 8px 14px 10px;
+}
+
+.card-stage.fullscreen .anime-card-content h2 {
+  font-size: 16px;
+}
+
+.card-stage.fullscreen .anime-meta {
+  margin-bottom: 6px;
+}
+
+.card-stage.fullscreen .anime-synopsis {
+  max-height: 60px;
+  margin-bottom: 8px;
+}
+
+/* --- Zoom image --- */
+
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(30, 30, 40, 0.9);
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
 }
 
 /* --- Bouton retour --- */
@@ -577,7 +766,6 @@ h1, h2, h3 {
   box-shadow: 0 0 10px rgba(255, 210, 90, 0.4);
 }
 
-/* Bouton épingler en vue liste : grande zone de clic bien séparée du texte */
 .list-pin {
   width: 44px;
   height: 44px;
@@ -586,7 +774,6 @@ h1, h2, h3 {
   margin-left: 6px;
 }
 
-/* Bouton épingler sur les vignettes épinglées en haut : agrandi aussi */
 .pinned-item-badge {
   position: absolute;
   top: 6px;
@@ -595,26 +782,6 @@ h1, h2, h3 {
   height: 32px;
   font-size: 14px;
   background: rgba(10, 10, 15, 0.85);
-}
-
-/* Bouton épingler en vue grille : barre pleine largeur en bas de la vignette,
-   beaucoup plus facile à viser qu'un petit rond au coin */
-.grid-pin-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 7px 0;
-  border: none;
-  background: rgba(10, 10, 15, 0.85);
-  color: #e6e6e6;
-  font-size: 11px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.grid-pin-bar:active {
-  background: rgba(255, 210, 90, 0.35);
 }
 
 /* --- Listes + chapitres --- */
@@ -743,7 +910,7 @@ h1, h2, h3 {
   background: rgba(255, 210, 90, 0.3);
 }
 
-/* --- Popup détails / genres --- */
+/* --- Popups --- */
 
 .modal-overlay {
   position: fixed;
@@ -806,11 +973,122 @@ h1, h2, h3 {
   color: #e6e6e6;
   font-size: 16px;
   cursor: pointer;
-  z-index: 1;
+  z-index: 4;
 }
 
 .modal-close:hover {
   box-shadow: 0 0 10px rgba(90, 190, 255, 0.5);
+}
+
+.modal-media {
+  position: relative;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Modale compacte (recherche) : affiche à gauche, infos à droite, pas de synopsis */
+
+.modal-content.compact {
+  max-width: 400px;
+  padding-top: 48px;
+}
+
+.compact-header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.modal-content .compact-poster {
+  width: 110px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.compact-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.compact-info h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.compact-info p {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.compact-info .modal-subtitle {
+  margin-top: 0;
+}
+
+/* Boutons de modale (favori / aller à la saison / etc.) */
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.modal-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.modal-btn:hover {
+  transform: translateY(-2px);
+}
+
+.modal-btn:active {
+  transform: scale(0.98);
+}
+
+.modal-btn.favorite {
+  border-color: rgba(255, 90, 120, 0.5);
+  background: rgba(255, 90, 120, 0.1);
+  color: #ff8aa0;
+}
+
+.modal-btn.favorite:hover {
+  background: rgba(255, 90, 120, 0.18);
+  box-shadow: 0 0 16px rgba(255, 90, 120, 0.45);
+}
+
+.modal-btn.favorite.active {
+  background: linear-gradient(135deg, #ff5a78, #d63a5c);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 90, 120, 0.45);
+}
+
+.modal-btn.season {
+  background: linear-gradient(135deg, #5ab4ff, #3a7fd9);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(90, 190, 255, 0.35);
+}
+
+.modal-btn.season:hover {
+  box-shadow: 0 0 22px rgba(90, 190, 255, 0.6);
+}
+
+.modal-btn.reset {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: #1c1c26;
+  color: #b8b8c4;
 }
 
 /* --- Navigation basse --- */
@@ -856,22 +1134,4 @@ h1, h2, h3 {
 
 .bottom-nav button:hover {
   color: #cfe9ff;
-}
-
-.modal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.modal-favorite-button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 90, 90, 0.4);
-  background: rgba(255, 90, 90, 0.1);
-  color: #ff8a8a;
-  font-size: 14px;
-  cursor: pointer;
 }

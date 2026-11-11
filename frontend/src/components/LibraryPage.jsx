@@ -210,6 +210,7 @@ function LibraryPage({ onSelectSeason, animeStatuses, onToggleFavorite }) {
         onGoToSeason={handleGoToSeason}
         isFavorite={selectedIsFavorite}
         onToggleFavorite={onToggleFavorite}
+        compact
       />
     </div>
   );
